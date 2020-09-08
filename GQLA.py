@@ -4,6 +4,7 @@ import json
 import aiohttp
 import logging
 import logging.config
+import os.path
 
 from settings import LOGGING_BASE_CONFIG
 
@@ -85,8 +86,11 @@ class GQLA:
         done, pending = await asyncio.wait(futures)
         result = done.pop().result()
         if to_file:
-            filename = str(self.name) + '_' + query_name + '.json'
+            folder = os.path.join('GQLA_helper', self.name)
+            filename = os.path.join(folder, '_' + query_name + '.json')
             logging.info(' '.join(['WRITING', query_name, 'RESULT TO', filename]))
+            if not os.path.exists(folder):
+                os.mkdir(folder)
             with open(filename, 'w') as ofs:
                 ofs.write(json.dumps(result, indent=4))
         return result
@@ -104,7 +108,10 @@ class GQLA:
 
         queries = result['data']['__schema']['types']
 
-        with open(str(self.name) + '_model.json', 'w') as ofs:
+        folder = os.path.join('GQLA_helper', self.name)
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+        with open(os.path.join(folder, 'model.json'), 'w') as ofs:
             ofs.write(json.dumps(queries, indent=4))
 
         self.create_data(queries)
@@ -137,7 +144,10 @@ class GQLA:
                     continue
                 query_str[query] = ' {' + ' '.join(subquery_val) + '}'
         self._queries = query_str
-        with open(self.name + '_queries.json', 'w') as ofs:
+        folder = os.path.join('GQLA_helper', self.name)
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+        with open(os.path.join(folder, 'queries.json'), 'w') as ofs:
             ofs.write(json.dumps(self._queries, indent=4))
 
     def subquery(self, item):
