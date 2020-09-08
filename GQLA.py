@@ -86,7 +86,7 @@ class GQLA:
         done, pending = await asyncio.wait(futures)
         result = done.pop().result()
         if to_file:
-            folder = os.path.join('GQLA_helper', self.name)
+            folder = os.path.join('gqla', self.name)
             filename = os.path.join(folder, '_' + query_name + '.json')
             logging.info(' '.join(['WRITING', query_name, 'RESULT TO', filename]))
             if not os.path.exists(folder):
@@ -108,7 +108,7 @@ class GQLA:
 
         queries = result['data']['__schema']['types']
 
-        folder = os.path.join('GQLA_helper', self.name)
+        folder = os.path.join('gqla', self.name)
         if not os.path.exists(folder):
             os.mkdir(folder)
         with open(os.path.join(folder, 'model.json'), 'w') as ofs:
@@ -144,7 +144,7 @@ class GQLA:
                     continue
                 query_str[query] = ' {' + ' '.join(subquery_val) + '}'
         self._queries = query_str
-        folder = os.path.join('GQLA_helper', self.name)
+        folder = os.path.join('gqla', self.name)
         if not os.path.exists(folder):
             os.mkdir(folder)
         with open(os.path.join(folder, 'queries.json'), 'w') as ofs:
