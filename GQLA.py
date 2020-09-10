@@ -104,7 +104,7 @@ class GQLA:
 
         queries = result['data']['__schema']['types']
 
-        with open(str(self.name) + '.json', 'w') as ofs:
+        with open(str(self.name) + '_model.json', 'w') as ofs:
             ofs.write(json.dumps(queries, indent=4))
 
         self.create_data(queries)
@@ -131,9 +131,14 @@ class GQLA:
         query_str = {}
         for query in queries:
             if queries[query].kind == 'OBJECT':
-                subquery_val = self.subquery(self._model.objects[queries[query].name])
+                try:
+                    subquery_val = self.subquery(self._model.objects[queries[query].name])
+                except RecursionError:
+                    continue
                 query_str[query] = ' {' + ' '.join(subquery_val) + '}'
         self._queries = query_str
+        with open(self.name + '_queries.json', 'w') as ofs:
+            ofs.write(json.dumps(self._queries, indent=4))
 
     def subquery(self, item):
         query = []
@@ -267,25 +272,25 @@ def parse_object(item):
     return object_instance
 
 
-# async def asynchronous():  # Пример работы
-#     helper = GQLA('ship')
-#     helper.url = '10.10.127.19'
-#     helper.port = '8086'
-#
-#     ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor']
-#
-#     helper.set_ignore(ignore)
-#
-#     await helper.introspection()
-#
-#     logging.info(' '.join(['QUERRY vesselTypes RESULT:', str(await helper.query_one('vesselTypes', to_file=True))]))
-#     logging.info(' '.join(['QUERRY vesselTypes RESULT:', str(await helper.query_one('civilVesselsData', to_file=True, onlyIdentified='false', first=1))]))
-#     logging.info(' '.join(['QUERRY vesselTypes RESULT:', str(await helper.query_one('shipData', to_file=True, onlyIdentified='false', first=20))]))
-#
-#
-# if __name__ == "__main__":
-#     loop_ = asyncio.get_event_loop()
-#     loop_.run_until_complete(asynchronous())
-#
-#     loop_.close()
-#     pass
+async def asynchronous():  # Пример работы
+    helper = GQLA('ship')
+    helper.url = '10.10.127.19'
+    helper.port = '8086'
+
+    ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor']
+
+    helper.set_ignore(ignore)
+
+    await helper.introspection()
+
+    logging.info(' '.join(['QUERRY vesselTypes RESULT:', str(await helper.query_one('vesselTypes', to_file=True))]))
+    logging.info(' '.join(['QUERRY vesselTypes RESULT:', str(await helper.query_one('civilVesselsData', to_file=True, onlyIdentified='false', first=1))]))
+    logging.info(' '.join(['QUERRY vesselTypes RESULT:', str(await helper.query_one('shipData', to_file=True, onlyIdentified='false', first=20))]))
+
+
+if __name__ == "__main__":
+    loop_ = asyncio.get_event_loop()
+    loop_.run_until_complete(asynchronous())
+
+    loop_.close()
+    pass
