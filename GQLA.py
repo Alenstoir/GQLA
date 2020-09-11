@@ -6,10 +6,6 @@ import logging
 import logging.config
 import os.path
 
-from settings import LOGGING_BASE_CONFIG
-
-logging.getLogger(__name__)
-logging.config.dictConfig(LOGGING_BASE_CONFIG)
 
 
 class GQLA:
@@ -283,8 +279,8 @@ def parse_object(item):
 
 
 async def asynchronous():  # Пример работы
-    helper = GQLA('ship')
-    helper.url = '10.10.127.19'
+    helper = GQLA('graphql-service')
+    helper.url = 'localhost'
     helper.port = '8086'
 
     ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor']
@@ -293,12 +289,13 @@ async def asynchronous():  # Пример работы
 
     await helper.introspection()
 
-    logging.info(' '.join(['QUERRY vesselTypes RESULT:', str(await helper.query_one('vesselTypes', to_file=True))]))
-    logging.info(' '.join(['QUERRY vesselTypes RESULT:', str(await helper.query_one('civilVesselsData', to_file=True, onlyIdentified='false', first=1))]))
-    logging.info(' '.join(['QUERRY vesselTypes RESULT:', str(await helper.query_one('shipData', to_file=True, onlyIdentified='false', first=20))]))
-
 
 if __name__ == "__main__":
+    
+    from settings import LOGGING_BASE_CONFIG
+
+    logging.getLogger(__name__)
+    logging.config.dictConfig(LOGGING_BASE_CONFIG)
     loop_ = asyncio.get_event_loop()
     loop_.run_until_complete(asynchronous())
 
