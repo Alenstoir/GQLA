@@ -155,8 +155,6 @@ class GQLA:
 
     def subquery(self, item):
         query = []
-        if self._depth == self.recursive_depth:
-            return None
         for field in item.fields:
             if item.fields[field].kind == "OBJECT":
                 self._depth += 1
@@ -165,12 +163,15 @@ class GQLA:
                 subquery_val = item.fields[field].name
                 subquery_val = self._model.objects[subquery_val]
                 subquery_val = self.subquery(subquery_val)
-                if subquery_val is not None:
-                    query.append((str(field) + ' {' + ' '.join(subquery_val) + '}'))
+                if subquery_val is None:
+                    continue
+                query.append((str(field) + ' {' + ' '.join(subquery_val) + '}'))
             else:
                 if field in self._ignore:
                     continue
                 query.append(field)
+                if self._depth >= self.recursive_depth:
+                    return query
         return query
 
 
@@ -291,14 +292,17 @@ def parse_object(item):
 
 async def asynchronous():  # Пример работы
     helper = GQLA('graphql-service')
-    helper.url = 'localhost'
-    helper.port = '8086'
+    helper.url = '10.10.127.19'
+    helper.port = '8100'
 
     ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor']
 
     helper.set_ignore(ignore)
 
     await helper.introspection()
+
+    for query in helper._queries:
+        print(query, helper._queries[query])
 
 
 if __name__ == "__main__":
