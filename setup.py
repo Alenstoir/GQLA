@@ -1,11 +1,14 @@
 import setuptools
 
+with open('VERSION', 'r') as verfile:
+    version = verfile.read()
+
 with open("README.md", 'r') as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="gqla",
-    version="0.0.1",
+    version=version,
     author="Alexey Kuzin",
     author_email="alenstoir@yandex.ru",
     description="A module used to generate querry statements and perform data fetching via GraphQL",

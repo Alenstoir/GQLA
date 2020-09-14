@@ -157,12 +157,13 @@ class GQLA:
         query = []
         for field in item.fields:
             if item.fields[field].kind == "OBJECT":
-                self._depth += 1
                 if field in self._ignore:
                     continue
+                self._depth += 1
                 subquery_val = item.fields[field].name
                 subquery_val = self._model.objects[subquery_val]
                 subquery_val = self.subquery(subquery_val)
+                self._depth -= 1
                 if subquery_val is None:
                     continue
                 query.append((str(field) + ' {' + ' '.join(subquery_val) + '}'))
@@ -292,7 +293,7 @@ def parse_object(item):
 
 async def asynchronous():  # Пример работы
     helper = GQLA('graphql-service')
-    helper.url = '10.10.127.19'
+    helper.url = 'localhost'
     helper.port = '8100'
 
     ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor']
