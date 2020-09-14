@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 
 try:
-    with open('VERSION', 'r') as v_file:
+    with open('../VERSION', 'r') as v_file:
         VERSION = v_file.readline()
 except FileNotFoundError or FileExistsError:
     VERSION = 'UNDEFINED'

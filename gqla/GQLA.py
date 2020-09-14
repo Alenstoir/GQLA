@@ -7,9 +7,8 @@ import logging.config
 import os.path
 
 
-
 class GQLA:
-    __slots__ = ('url', 'port', 'name', '_ignore', '_model', '_queries', '_subpid')
+    __slots__ = ('url', 'port', 'name', '_ignore', '_model', '_queries', '_subpid', 'usefolder')
 
     URL_TEMPLATE = "http://{}:{}/graphql"
 
@@ -40,7 +39,7 @@ class GQLA:
                  ' }\n          }\n        }\n      }\n    }\n  ',
         'variables': {}, 'operationName': None}
 
-    def __init__(self, name, url=None, port=None, ignore=None):
+    def __init__(self, name, url=None, port=None, ignore=None, usefolder=False):
         self._subpid = 0
         self._model = None
         self._queries = {}
@@ -48,13 +47,14 @@ class GQLA:
         self.name = name
         self.url = url
         self.port = port
+        self.usefolder = usefolder
 
         logging.info(' '.join(['CREATED', 'CLASS', str(self.__class__)]))
 
     def set_ignore(self, ignore_):
         self._ignore = ignore_
 
-    def can_query(self):
+    def _can_query(self):
         if self.url is None or self.port is None or self.name is None:
             raise AttributeError
 
@@ -67,7 +67,7 @@ class GQLA:
         return json.loads(response)
 
     async def query_one(self, query_name, to_file=False, **kwargs):
-        self.can_query()
+        self._can_query()
         logging.info(' '.join(['QUERRYING', query_name, 'WITH PARAMS', str(kwargs)]))
         if len(kwargs) > 0:
             params = "(" + str(kwargs).replace("'", '').replace('{', '').replace('}', '') + ")"
@@ -81,18 +81,19 @@ class GQLA:
 
         done, pending = await asyncio.wait(futures)
         result = done.pop().result()
-        if to_file:
-            folder = os.path.join('gqla', self.name)
-            filename = os.path.join(folder, '_' + query_name + '.json')
-            logging.info(' '.join(['WRITING', query_name, 'RESULT TO', filename]))
-            if not os.path.exists(folder):
-                os.mkdir(folder)
-            with open(filename, 'w') as ofs:
-                ofs.write(json.dumps(result, indent=4))
+        if self.usefolder:
+            if to_file:
+                folder = os.path.join('', self.name)
+                filename = os.path.join(folder, '_' + query_name + '.json')
+                logging.info(' '.join(['WRITING', query_name, 'RESULT TO', filename]))
+                if not os.path.exists(folder):
+                    os.mkdir(folder)
+                with open(filename, 'w') as ofs:
+                    ofs.write(json.dumps(result, indent=4))
         return result
 
     async def introspection(self):
-        self.can_query()
+        self._can_query()
 
         logging.info(' '.join(['QUERRYING', self.name, 'INTROSPECTION']))
 
@@ -104,11 +105,12 @@ class GQLA:
 
         queries = result['data']['__schema']['types']
 
-        folder = os.path.join('gqla', self.name)
-        if not os.path.exists(folder):
-            os.mkdir(folder)
-        with open(os.path.join(folder, 'model.json'), 'w') as ofs:
-            ofs.write(json.dumps(queries, indent=4))
+        if self.usefolder:
+            folder = os.path.join('', self.name)
+            if not os.path.exists(folder):
+                os.mkdir(folder)
+            with open(os.path.join(folder, 'model.json'), 'w') as ofs:
+                ofs.write(json.dumps(queries, indent=4))
 
         self.create_data(queries)
         self.generate_queries()
@@ -140,11 +142,12 @@ class GQLA:
                     continue
                 query_str[query] = ' {' + ' '.join(subquery_val) + '}'
         self._queries = query_str
-        folder = os.path.join('gqla', self.name)
-        if not os.path.exists(folder):
-            os.mkdir(folder)
-        with open(os.path.join(folder, 'queries.json'), 'w') as ofs:
-            ofs.write(json.dumps(self._queries, indent=4))
+        if self.usefolder:
+            folder = os.path.join('', self.name)
+            if not os.path.exists(folder):
+                os.mkdir(folder)
+            with open(os.path.join(folder, 'queries.json'), 'w') as ofs:
+                ofs.write(json.dumps(self._queries, indent=4))
 
     def subquery(self, item):
         query = []
@@ -291,8 +294,8 @@ async def asynchronous():  # Пример работы
 
 
 if __name__ == "__main__":
-    
-    from settings import LOGGING_BASE_CONFIG
+
+    from gqla.settings import LOGGING_BASE_CONFIG
 
     logging.getLogger(__name__)
     logging.config.dictConfig(LOGGING_BASE_CONFIG)
