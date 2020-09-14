@@ -8,7 +8,8 @@ import os.path
 
 
 class GQLA:
-    __slots__ = ('url', 'port', 'name', '_ignore', '_model', '_queries', '_subpid', 'usefolder')
+    __slots__ = ('url', 'port', 'name', '_ignore', '_model', '_queries', '_subpid', 'usefolder', 'recursive_depth',
+                 '_depth')
 
     URL_TEMPLATE = "http://{}:{}/graphql"
 
@@ -39,8 +40,9 @@ class GQLA:
                  ' }\n          }\n        }\n      }\n    }\n  ',
         'variables': {}, 'operationName': None}
 
-    def __init__(self, name, url=None, port=None, ignore=None, usefolder=False):
+    def __init__(self, name, url=None, port=None, ignore=None, usefolder=False, recursive_depth=15):
         self._subpid = 0
+        self._depth = 0
         self._model = None
         self._queries = {}
         self._ignore = ignore
@@ -48,6 +50,7 @@ class GQLA:
         self.url = url
         self.port = port
         self.usefolder = usefolder
+        self.recursive_depth = recursive_depth
 
         logging.info(' '.join(['CREATED', 'CLASS', str(self.__class__)]))
 
@@ -137,6 +140,7 @@ class GQLA:
         for query in queries:
             if queries[query].kind == 'OBJECT':
                 try:
+                    self._depth = 0
                     subquery_val = self.subquery(self._model.objects[queries[query].name])
                 except RecursionError:
                     continue
@@ -151,14 +155,18 @@ class GQLA:
 
     def subquery(self, item):
         query = []
+        if self._depth == self.recursive_depth:
+            return None
         for field in item.fields:
             if item.fields[field].kind == "OBJECT":
+                self._depth += 1
                 if field in self._ignore:
                     continue
                 subquery_val = item.fields[field].name
                 subquery_val = self._model.objects[subquery_val]
                 subquery_val = self.subquery(subquery_val)
-                query.append((str(field) + ' {' + ' '.join(subquery_val) + '}'))
+                if subquery_val is not None:
+                    query.append((str(field) + ' {' + ' '.join(subquery_val) + '}'))
             else:
                 if field in self._ignore:
                     continue

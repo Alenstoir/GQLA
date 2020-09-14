@@ -4,7 +4,7 @@ with open("README.md", 'r') as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="GQLA-Alenstoir",
+    name="gqla",
     version="0.0.1",
     author="Alexey Kuzin",
     author_email="alenstoir@yandex.ru",
@@ -12,6 +12,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/Alenstoir/GQLA",
+    license='MIT License',
+    requires='aiohttp',
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

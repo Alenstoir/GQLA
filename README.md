@@ -74,6 +74,8 @@ print(result)
 - `url` - url of `GraphQL` service
 - `port` - port of `GraphQL` service
 - `usefolder` - directive to use folder to store data such as service model, querries and returned data
+- `recursive_depth` - recursion depth limitation;
+
 ##### Methods
 Notice that `async` meant to execute in execution loop;
 - `set_ignore` - set `_ignore` field of main class;
