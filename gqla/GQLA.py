@@ -40,7 +40,7 @@ class GQLA:
                  ' }\n          }\n        }\n      }\n    }\n  ',
         'variables': {}, 'operationName': None}
 
-    def __init__(self, name, url=None, port=None, ignore=None, usefolder=False, recursive_depth=15):
+    def __init__(self, name, url=None, port=None, ignore=None, usefolder=False, recursive_depth=5):
         self._subpid = 0
         self._depth = 0
         self._model = None
@@ -76,8 +76,13 @@ class GQLA:
             params = "(" + str(kwargs).replace("'", '').replace('{', '').replace('}', '') + ")"
         else:
             params = ''
-        query = {
-            'query': self.QUERY_RAW.format(query='{}{}'.format(query_name, params), fields=self._queries[query_name])}
+        if self._queries[query_name] == '':
+            query = {
+                'query': self.QUERY_RAW.format(query='{}{}'.format(query_name, params), fields='')}
+        else:
+            query = {
+                'query': self.QUERY_RAW.format(query='{}{}'.format(query_name, params),
+                                               fields=self._queries[query_name])}
 
         futures = [self.fetch_async(self._subpid, self.URL_TEMPLATE.format(self.url, self.port), query=query)]
         self._subpid += 1
@@ -130,6 +135,7 @@ class GQLA:
                 self._model.add_object(obj)
 
     def generate_queries(self, specific=False):
+
         if 'Query' in self._model.objects:
             queries = self._model.objects['Query'].fields
         elif 'Queries' in self._model.objects:
@@ -145,6 +151,8 @@ class GQLA:
                 except RecursionError:
                     continue
                 query_str[query] = ' {' + ' '.join(subquery_val) + '}'
+            else:
+                query_str[query] = ''
         self._queries = query_str
         if self.usefolder:
             folder = os.path.join('', self.name)
@@ -292,18 +300,20 @@ def parse_object(item):
 
 
 async def asynchronous():  # Пример работы
-    helper = GQLA('graphql-service')
+    helper = GQLA('solar', usefolder=True)
     helper.url = 'localhost'
-    helper.port = '8100'
+    helper.port = '8080'
 
-    ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor']
+    ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor', 'parent1']
 
     helper.set_ignore(ignore)
 
     await helper.introspection()
 
     for query in helper._queries:
-        print(query, helper._queries[query])
+        print(query)
+    result = await helper.query_one('allPlanets')
+    print(result)
 
 
 if __name__ == "__main__":

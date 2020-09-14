@@ -17,6 +17,8 @@ GQLA is published under MIT license and doesn't provide any warranty. It is sing
 `No active and fast responces to dev`
 
 ## Usage
+___WARNING___ : _watch carefull about your recursion depth; nodes and edges also counted as recursion level;_
+
 Example of basic usage bellow:
 ```python
 # Create a GQLA class instance with name 'graphql-service'
