@@ -6,9 +6,9 @@ import logging
 import logging.config
 import os.path
 
-from abc import ABC, abstractmethod
-
-from gqla.abstracts.abstracts import GQBase
+from gqla.GQLModel.GQLModel import GQModel
+from gqla.GQLStorage.GQLStorage import TypeFactory
+from gqla.GQLStorage.abstracts import GQBase
 
 
 class GQLA:
@@ -130,20 +130,24 @@ class GQLA:
     def create_data(self, data):
         self._model = GQModel()
         for item in data:
-            if item['kind'] == 'ENUM':
-                self._model.add_enum(parse_enum(item))
-            elif item['kind'] == 'SCALAR':
-                self._model.add_scalar(parse_scalar(item))
-            elif item['kind'] == 'OBJECT':
-                obj = parse_object(item)
-                self._model.add_object(obj)
+            # if item['kind'] is not None:
+            obj = TypeFactory(item)
+            if obj is not None:
+                self._model.add_item(obj.parse(item))
+            # if item['kind'] == 'ENUM':
+            #     self._model.add_enum(parse_enum(item))
+            # elif item['kind'] == 'SCALAR':
+            #     self._model.add_scalar(parse_scalar(item))
+            # elif item['kind'] == 'OBJECT':
+            #     obj = parse_object(item)
+            #     self._model.add_object(obj)
 
     def generate_queries(self, specific=False):
-
-        if 'Query' in self._model.objects:
-            queries = self._model.objects['Query'].fields
-        elif 'Queries' in self._model.objects:
-            queries = self._model.objects['Queries'].fields
+        print(self._model.items)
+        if 'Query' in self._model.items:
+            queries = self._model.items['Query'].fields
+        elif 'Queries' in self._model.items:
+            queries = self._model.items['Queries'].fields
         else:
             raise NotImplementedError
         query_str = {}
@@ -151,7 +155,7 @@ class GQLA:
             if queries[query].kind == 'OBJECT':
                 try:
                     self._depth = 0
-                    subquery_val = self.subquery(self._model.objects[queries[query].name])
+                    subquery_val = self.subquery(self._model.items[queries[query].name])
                 except RecursionError:
                     continue
                 query_str[query] = ' {' + ' '.join(subquery_val) + '}'
@@ -173,7 +177,7 @@ class GQLA:
                     continue
                 self._depth += 1
                 subquery_val = item.fields[field].name
-                subquery_val = self._model.objects[subquery_val]
+                subquery_val = self._model.items[subquery_val]
                 subquery_val = self.subquery(subquery_val)
                 self._depth -= 1
                 if subquery_val is None:
@@ -200,145 +204,145 @@ class GQLA:
 #         return answer
 
 
-class GQEnum(GQBase):
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def kind(self):
-        return self._kind
-
-    def __init__(self, name, kind, values=None):
-        super().__init__(name, kind)
-        self.values = values
-
-    def __repr__(self):
-        answer = ','.join(['name: ' + self.name, ' kind:' + self.kind, ' values:' + str(self.values)])
-        return answer
-
-
-class GQJSON(GQBase):
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def kind(self):
-        return self._kind
-
-    def __init__(self, kind, object_name):
-        super().__init__(object_name, kind)
-
-    def __repr__(self):
-        pass
-
-
-class GQScalar(GQBase):
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def kind(self):
-        return self._kind
-
-    def __init__(self, object_name, kind):
-        super().__init__(object_name, kind)
-
-    def __repr__(self):
-        answer = ','.join(['name: ' + self.name, ' kind:' + self.kind])
-        return answer
-
-
-class GQObject(GQBase):
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def kind(self):
-        return self._kind
-
-    def __init__(self, kind, object_name):
-        super().__init__(object_name, kind)
-        self.fields = {}
-
-    def add_field(self, name, field: GQBase):
-        self.fields[name] = field
-
-    def __repr__(self):
-        answer = ','.join(['name: ' + self.name, ' kind:' + self.kind, ' fields:['])
-        for field in self.fields:
-            answer += '{' + str(self.fields[field]) + '},'
-        answer = answer.strip(',') + ']'
-        return answer
-
-
-class GQModel:
-    __slots__ = ('_scalars', 'queries', 'objects', '_enums', '_ignore')
-
-    def __init__(self):
-        self._scalars = {}
-        self.queries = ''
-        self.objects = {}
-        self._enums = {}
-
-    def add_object(self, object_inst: GQObject):
-        self.objects[object_inst.name] = object_inst
-
-    def add_scalar(self, scalar: GQScalar):
-        self._scalars[scalar.name] = scalar
-
-    def add_enum(self, enum: GQEnum):
-        self._scalars[enum.name] = enum
-
-    def set_queries(self, filename: str):
-        self.queries = filename
+# class GQEnum(GQBase):
+#
+#     @property
+#     def name(self):
+#         return self._name
+#
+#     @property
+#     def kind(self):
+#         return self._kind
+#
+#     def __init__(self, name, kind, values=None):
+#         super().__init__(name, kind)
+#         self.values = values
+#
+#     def __repr__(self):
+#         answer = ','.join(['name: ' + self.name, ' kind:' + self.kind, ' values:' + str(self.values)])
+#         return answer
+#
+#
+# class GQJSON(GQBase):
+#
+#     @property
+#     def name(self):
+#         return self._name
+#
+#     @property
+#     def kind(self):
+#         return self._kind
+#
+#     def __init__(self, kind, object_name):
+#         super().__init__(object_name, kind)
+#
+#     def __repr__(self):
+#         pass
+#
+#
+# class GQScalar(GQBase):
+#
+#     @property
+#     def name(self):
+#         return self._name
+#
+#     @property
+#     def kind(self):
+#         return self._kind
+#
+#     def __init__(self, object_name, kind):
+#         super().__init__(object_name, kind)
+#
+#     def __repr__(self):
+#         answer = ','.join(['name: ' + self.name, ' kind:' + self.kind])
+#         return answer
+#
+#
+# class GQObject(GQBase):
+#
+#     @property
+#     def name(self):
+#         return self._name
+#
+#     @property
+#     def kind(self):
+#         return self._kind
+#
+#     def __init__(self, kind, object_name):
+#         super().__init__(object_name, kind)
+#         self.fields = {}
+#
+#     def add_field(self, name, field: GQBase):
+#         self.fields[name] = field
+#
+#     def __repr__(self):
+#         answer = ','.join(['name: ' + self.name, ' kind:' + self.kind, ' fields:['])
+#         for field in self.fields:
+#             answer += '{' + str(self.fields[field]) + '},'
+#         answer = answer.strip(',') + ']'
+#         return answer
 
 
-def parse_enum(item):
-    values = []
-    if 'enumValues' in item:
-        for enum in item['enumValues']:
-            values.append(enum['name'])
-    enum = GQEnum(item['name'], item['kind'], values)
-    return enum
+# class GQModel:
+#     __slots__ = ('_scalars', 'queries', 'objects', '_enums', '_ignore')
+#
+#     def __init__(self):
+#         self._scalars = {}
+#         self.queries = ''
+#         self.objects = {}
+#         self._enums = {}
+#
+#     def add_object(self, object_inst: GQObject):
+#         self.objects[object_inst.name] = object_inst
+#
+#     def add_scalar(self, scalar: GQScalar):
+#         self._scalars[scalar.name] = scalar
+#
+#     def add_enum(self, enum: GQEnum):
+#         self._scalars[enum.name] = enum
+#
+#     def set_queries(self, filename: str):
+#         self.queries = filename
 
 
-def parse_scalar(item):
-    scalar = GQScalar(item['name'], item['kind'])
-    return scalar
+# def parse_enum(item):
+#     values = []
+#     if 'enumValues' in item:
+#         for enum in item['enumValues']:
+#             values.append(enum['name'])
+#     enum = GQEnum(item['name'], item['kind'], values)
+#     return enum
 
 
-def parse_nested_object(item):
-    object_instance = GQObject(item['kind'], item['name'])
-    return object_instance
+# def parse_scalar(item):
+#     scalar = GQScalar(item['name'], item['kind'])
+#     return scalar
 
 
-def parse_object(item):
-    object_instance = GQObject(item['kind'], item['name'])
+# def parse_nested_object(item):
+#     object_instance = GQObject(item['kind'], item['name'])
+#     return object_instance
 
-    if 'fields' in item:
-        for field in item['fields']:
-            kind = field['type']
-            while True:
-                if kind['name'] is None:
-                    kind = kind['ofType']
-                else:
-                    if kind['kind'] == 'OBJECT':
-                        obj = parse_nested_object(kind)
-                        object_instance.add_field(field['name'], obj)
-                    if kind['kind'] == 'ENUM':
-                        object_instance.add_field(field['name'], parse_enum(kind))
-                    elif kind['kind'] == 'SCALAR':
-                        object_instance.add_field(field['name'], parse_scalar(kind))
-                    break
-    return object_instance
+
+# def parse_object(item):
+#     object_instance = GQObject(item['kind'], item['name'])
+#
+#     if 'fields' in item:
+#         for field in item['fields']:
+#             kind = field['type']
+#             while True:
+#                 if kind['name'] is None:
+#                     kind = kind['ofType']
+#                 else:
+#                     if kind['kind'] == 'OBJECT':
+#                         obj = parse_nested_object(kind)
+#                         object_instance.add_field(field['name'], obj)
+#                     if kind['kind'] == 'ENUM':
+#                         object_instance.add_field(field['name'], parse_enum(kind))
+#                     elif kind['kind'] == 'SCALAR':
+#                         object_instance.add_field(field['name'], parse_scalar(kind))
+#                     break
+#     return object_instance
 
 
 async def asynchronous():  # Пример работы

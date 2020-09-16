@@ -22,3 +22,7 @@ class GQBase(ABC):
     @abstractmethod
     def __repr__(self):
         """Representation of object"""
+
+    @abstractmethod
+    def parse(self, item):
+        """Parsing an object"""
