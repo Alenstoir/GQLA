@@ -9,12 +9,12 @@ GQLA provides an easy way to fetch data from GraphQL api on server side.
 - [Structure](#Structure)
 
 ## Intro
-GQLA is published under MIT license and doesn't provide any warranty. It is single person developed package.
-
+GQLA is published under MIT license and doesn't provide any warranty. It is single person developed package.    
 `No roadmap`
 `No warranty`
 `No consistency`
-`No active and fast responces to dev`
+`No active and fast responces to dev`   
+**This project not following [SOLID](https://github.com/Alenstoir/DOCVAULT/blob/master/OOP/RU/SOLID.md) yet**
 
 ## Usage
 ___WARNING___ : _watch carefull about your recursion depth; nodes and edges also counted as recursion level;_
@@ -22,7 +22,7 @@ ___WARNING___ : _watch carefull about your recursion depth; nodes and edges also
 Example of basic usage bellow:
 ```python
 # Create a GQLA class instance with name 'graphql-service'
-helper = GQLA('graphql-service')  
+helper = GQLA('graphql-service')  # noqa
 # Define url of service as localhost
 helper.url = 'localhost'  
 # Define port of service 
@@ -44,7 +44,7 @@ Notice that you can use folders to save infrastructure and results:
 # Create a list of ignored fields (recommended values)
 ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor']  
 # Create a GQLA class instance with provided settings
-helper = GQLA('graphql-service', url='localhost', port=8086, ignore=ignore, usefolder=True)  
+helper = GQLA('graphql-service', url='localhost', port=8086, ignore=ignore, usefolder=True)  # noqa
 # Request introspection (saved to "gqla/graphql-service" folder)
 await helper.introspection()
 # Request query with argument useSomeArgs='false' and specify that we use folder to save result

@@ -6,6 +6,10 @@ import logging
 import logging.config
 import os.path
 
+from abc import ABC, abstractmethod
+
+from gqla.abstracts.abstracts import GQBase
+
 
 class GQLA:
     __slots__ = ('url', 'port', 'name', '_ignore', '_model', '_queries', '_subpid', 'usefolder', 'recursive_depth',
@@ -184,20 +188,27 @@ class GQLA:
         return query
 
 
-class GQBase:
-    __slots__ = ('name', 'kind')
-
-    def __init__(self, name, kind):
-        self.name = name
-        self.kind = kind
-
-    def __repr__(self):
-        answer = ','.join(['kind: ' + self.kind, ' name: ' + self.name])
-        return answer
+# class GQBase:
+#     __slots__ = ('name', 'kind')
+#
+#     def __init__(self, name, kind):
+#         self.name = name
+#         self.kind = kind
+#
+#     def __repr__(self):
+#         answer = ','.join(['kind: ' + self.kind, ' name: ' + self.name])
+#         return answer
 
 
 class GQEnum(GQBase):
-    __slots__ = ('name', 'kind', 'values')
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def kind(self):
+        return self._kind
 
     def __init__(self, name, kind, values=None):
         super().__init__(name, kind)
@@ -208,11 +219,35 @@ class GQEnum(GQBase):
         return answer
 
 
-class GQScalar(GQBase):
-    __slots__ = ('name', 'kind')
+class GQJSON(GQBase):
 
-    def __init__(self, name, kind):
-        super().__init__(name, kind)
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def kind(self):
+        return self._kind
+
+    def __init__(self, kind, object_name):
+        super().__init__(object_name, kind)
+
+    def __repr__(self):
+        pass
+
+
+class GQScalar(GQBase):
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def kind(self):
+        return self._kind
+
+    def __init__(self, object_name, kind):
+        super().__init__(object_name, kind)
 
     def __repr__(self):
         answer = ','.join(['name: ' + self.name, ' kind:' + self.kind])
@@ -220,10 +255,17 @@ class GQScalar(GQBase):
 
 
 class GQObject(GQBase):
-    __slots__ = ('name', 'kind', 'fields', 'nested')
 
-    def __init__(self, kind, name):
-        super().__init__(name, kind)
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def kind(self):
+        return self._kind
+
+    def __init__(self, kind, object_name):
+        super().__init__(object_name, kind)
         self.fields = {}
 
     def add_field(self, name, field: GQBase):
@@ -317,7 +359,6 @@ async def asynchronous():  # Пример работы
 
 
 if __name__ == "__main__":
-
     from gqla.settings import LOGGING_BASE_CONFIG
 
     logging.getLogger(__name__)
