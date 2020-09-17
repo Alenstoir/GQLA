@@ -1,5 +1,3 @@
-import logging
-
 from gqla.GQLStorage.abstracts import GQBase
 
 
@@ -27,7 +25,6 @@ class GQENUM(GQBase):
             for enum in item['enumValues']:
                 values.append(enum['name'])
         self.values = values
-        # enum = GQENUM(item['name'], item['kind'], values)
         return self
 
 
@@ -97,9 +94,6 @@ class GQOBJECT(GQBase):
         return answer
 
     def parse(self, item):
-        # def parse_nested_object(subitem):
-        #     sub_object_instance = TypeFactory(subitem)
-        #     return sub_object_instance
         if 'fields' in item:
             for field in item['fields']:
                 kind = field['type']
@@ -110,25 +104,16 @@ class GQOBJECT(GQBase):
                         obj = TypeFactory(kind)
                         if obj is not None:
                             self.add_field(field['name'], obj.parse(kind))
-                        # if kind['kind'] == 'OBJECT':
-                        #     object_instance.add_field(field['name'], parse_nested_object(kind))
-                        # if kind['kind'] == 'ENUM':
-                        #     object_instance.add_field(field['name'], parse_enum(kind))
-                        # elif kind['kind'] == 'SCALAR':
-                        #     object_instance.add_field(field['name'], parse_scalar(kind))
                         break
         return self
 
 
 def TypeFactory(kind): # noqa
-    # print(kind)
-    class_name = kind['kind']  # set by the command line options
+    class_name = kind['kind']
     possibles = globals().copy()
     possibles.update(locals())
     class_instance = possibles.get('GQ' + class_name)
     if not class_instance:
-        # logging.error(NotImplementedError("Class %s not implemented" % class_name))
-        # raise NotImplementedError("Class %s not implemented" % class_name)
         return None
     obj = class_instance(kind['name'], kind['kind'])
     return obj
