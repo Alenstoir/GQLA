@@ -8,17 +8,18 @@ import os.path
 
 from gqla.GQLModel.GQLModel import GQModel
 from gqla.GQLStorage.GQLStorage import TypeFactory
+from gqla.GQQStorage.GQQStorage import BasicStorage
 
 
 class GQLA:
     __slots__ = ('url', 'port', 'name', '_ignore', '_model', '_queries', '_subpid', 'usefolder', 'recursive_depth',
-                 '_depth')
+                 '_depth', 'qStorage')
 
     URL_TEMPLATE = "http://{}:{}/graphql"
 
     QUERY_RAW = """
                     query {{
-                        {query} {fields}
+                        {query}
                     }}
                 """
 
@@ -45,15 +46,14 @@ class GQLA:
 
     def __init__(self, name, url=None, port=None, ignore=None, usefolder=False, recursive_depth=5):
         self._subpid = 0
-        self._depth = 0
         self._model = None
-        self._queries = {}
         self._ignore = ignore
         self.name = name
         self.url = url
         self.port = port
         self.usefolder = usefolder
         self.recursive_depth = recursive_depth
+        self.qStorage = None
 
         logging.info(' '.join(['CREATED', 'CLASS', str(self.__class__)]))
 
@@ -73,19 +73,18 @@ class GQLA:
         return json.loads(response)
 
     async def query_one(self, query_name, to_file=False, **kwargs):
+        instance = self.qStorage.storage[query_name]
         self._can_query()
         logging.info(' '.join(['QUERRYING', query_name, 'WITH PARAMS', str(kwargs)]))
         if len(kwargs) > 0:
             params = "(" + str(kwargs).replace("'", '').replace('{', '').replace('}', '') + ")"
         else:
             params = ''
-        if self._queries[query_name] == '':
-            query = {
-                'query': self.QUERY_RAW.format(query='{}{}'.format(query_name, params), fields='')}
-        else:
-            query = {
-                'query': self.QUERY_RAW.format(query='{}{}'.format(query_name, params),
-                                               fields=self._queries[query_name])}
+        instance.args(params)
+        query = {
+            'query': self.QUERY_RAW.format(query=instance.query)
+        }
+        logging.info(query)
 
         futures = [self.fetch_async(self._subpid, self.URL_TEMPLATE.format(self.url, self.port), query=query)]
         self._subpid += 1
@@ -134,53 +133,16 @@ class GQLA:
                 self._model.add_item(obj.parse(item))
 
     def generate_queries(self, specific=False):
-        print(self._model.items)
+        self.qStorage = BasicStorage()
         if 'Query' in self._model.items:
             queries = self._model.items['Query'].fields
         elif 'Queries' in self._model.items:
             queries = self._model.items['Queries'].fields
         else:
             raise NotImplementedError
-        query_str = {}
-        for query in queries:
-            if queries[query].kind == 'OBJECT':
-                try:
-                    self._depth = 0
-                    subquery_val = self.subquery(self._model.items[queries[query].name])
-                except RecursionError:
-                    continue
-                query_str[query] = ' {' + ' '.join(subquery_val) + '}'
-            else:
-                query_str[query] = ''
-        self._queries = query_str
-        if self.usefolder:
-            folder = os.path.join('', self.name)
-            if not os.path.exists(folder):
-                os.mkdir(folder)
-            with open(os.path.join(folder, 'queries.json'), 'w') as ofs:
-                ofs.write(json.dumps(self._queries, indent=4))
 
-    def subquery(self, item):
-        query = []
-        for field in item.fields:
-            if item.fields[field].kind == "OBJECT":
-                if field in self._ignore:
-                    continue
-                self._depth += 1
-                subquery_val = item.fields[field].name
-                subquery_val = self._model.items[subquery_val]
-                subquery_val = self.subquery(subquery_val)
-                self._depth -= 1
-                if subquery_val is None:
-                    continue
-                query.append((str(field) + ' {' + ' '.join(subquery_val) + '}'))
-            else:
-                if field in self._ignore:
-                    continue
-                query.append(field)
-                if self._depth >= self.recursive_depth:
-                    return query
-        return query
+        for query in queries:
+            self.qStorage.create(query, queries[query], self._model, self._ignore, self.recursive_depth)
 
 
 async def asynchronous():  # Пример работы
@@ -194,8 +156,8 @@ async def asynchronous():  # Пример работы
 
     await helper.introspection()
 
-    for query in helper._queries:
-        print(query, helper._queries[query])
+    for query in helper.qStorage.storage:
+        print(helper.qStorage.storage[query].query)
     result = await helper.query_one('allPlanets')
     print(result)
 
