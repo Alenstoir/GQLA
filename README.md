@@ -20,7 +20,7 @@ GQLA is published under MIT license and doesn't provide any warranty. It is sing
 ___WARNING___ : _watch carefull about your recursion depth; nodes and edges also counted as recursion level;_
 
 Example of basic usage bellow:
-
+```python
 # Create a list of ignored fields (recommended values)
 ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor']  
 # Create a GQLA class instance with provided settings
