@@ -1,4 +1,4 @@
-from gqla.GQLStorage.abstracts import GQBase
+from gqla.abstracts import GQBase
 
 
 class GQENUM(GQBase):

@@ -1,4 +1,4 @@
-from gqla.GQQuery.Generator.abstracts import AbstractRule, AbstractGenerator
+from gqla.abstracts import AbstractRule, AbstractGenerator
 
 
 class NormalRule(AbstractRule):

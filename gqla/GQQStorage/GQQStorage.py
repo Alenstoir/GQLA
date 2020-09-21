@@ -1,7 +1,6 @@
-from gqla.GQQuery.Generator.Generator import BasicQueryGenerator, NormalRule, RecursiveRule
+from gqla.GQQuery.Generator import BasicQueryGenerator, NormalRule, RecursiveRule
 from gqla.GQQuery.GQQueriy import BasicQuery
-from gqla.GQQuery.abstracts import AbstractQuery
-from gqla.GQQStorage.abstracts import AbstractStorage
+from gqla.abstracts import AbstractQuery, AbstractStorage
 
 
 class BasicStorage(AbstractStorage):

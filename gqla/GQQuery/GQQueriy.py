@@ -1,5 +1,5 @@
-from gqla.GQQuery.Generator.Generator import BasicQueryGenerator
-from gqla.GQQuery.abstracts import AbstractQuery
+from gqla.GQQuery.Generator import BasicQueryGenerator
+from gqla.abstracts import AbstractQuery
 
 
 class BasicQuery(AbstractQuery):

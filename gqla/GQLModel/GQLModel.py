@@ -1,5 +1,4 @@
-from gqla.GQLModel.abstracts import GQBaseModel
-from gqla.GQLStorage.abstracts import GQBase
+from gqla.abstracts import GQBaseModel, GQBase
 
 
 class GQModel(GQBaseModel):
