@@ -59,7 +59,9 @@ class BasicExecutor(AbstractExecutor):
         self.QUERY_RAW = raw
         self.URL_TEMPLATE = template
         self.runner = runner
-        runner.set_url(self.URL_TEMPLATE.format(self.url, self.port))
+
+    def reset_url(self):
+        self.runner.set_url(self.URL_TEMPLATE.format(self.url, self.port))
 
     async def execute(self, pid='N/A', query=None, **kwargs):
         if self._storage is not None:

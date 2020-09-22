@@ -12,7 +12,7 @@ from gqla.GQQStorage.GQQStorage import BasicStorage
 
 
 class GQLA:
-    __slots__ = ('url', 'port', 'name', '_ignore', '_model', '_queries', '_subpid', 'usefolder', 'recursive_depth',
+    __slots__ = ('_url', '_port', 'name', '_ignore', '_model', '_queries', '_subpid', 'usefolder', 'recursive_depth',
                  '_depth', 'qStorage', 'executor')
 
     INTROSPECTION = {
@@ -41,8 +41,8 @@ class GQLA:
         self._model = None
         self._ignore = ignore
         self.name = name
-        self.url = url
-        self.port = port
+        self._url = url
+        self._port = port
         self.usefolder = usefolder
         self.recursive_depth = recursive_depth
         self.qStorage = None
@@ -52,6 +52,26 @@ class GQLA:
 
     def set_ignore(self, ignore_):
         self._ignore = ignore_
+
+    @property
+    def url(self):
+        return self._url
+
+    @url.setter
+    def url(self, value):
+        self._url = value
+        self.executor.url = self._url
+        self.executor.reset_url()
+
+    @property
+    def port(self):
+        return self._port
+
+    @port.setter
+    def port(self, value):
+        self._port = value
+        self.executor.port = self._port
+        self.executor.reset_url()
 
     async def query_one(self, query_name, to_file=False, **kwargs):
 
