@@ -6,6 +6,7 @@ import aiohttp
 import requests
 
 from gqla.abstracts import AbstractExecutor, AbstractRunner
+from gqla.statics.queries import RAW, BASE_TEMPLATE
 
 
 class AsyncRunner(AbstractRunner):
@@ -51,7 +52,7 @@ class SyncRunner(AbstractRunner):
 
 class BasicExecutor(AbstractExecutor):
 
-    def __init__(self, url, port, storage, raw="query {{ {query} }}", template="http://{}:{}/graphql", runner=AsyncRunner()):
+    def __init__(self, url, port, storage, raw=RAW, template=BASE_TEMPLATE, runner=AsyncRunner()):
         self._url = url
         self._port = port
         self._storage = storage
