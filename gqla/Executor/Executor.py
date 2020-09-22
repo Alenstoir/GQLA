@@ -52,13 +52,32 @@ class SyncRunner(AbstractRunner):
 class BasicExecutor(AbstractExecutor):
 
     def __init__(self, url, port, storage, raw="query {{ {query} }}", template="http://{}:{}/graphql", runner=AsyncRunner()):
-        self.url = url
-        self.port = port
+        self._url = url
+        self._port = port
         self._storage = storage
         self.storage = storage.storage if storage is not None else None
         self.QUERY_RAW = raw
         self.URL_TEMPLATE = template
         self.runner = runner
+        self.reset_url()
+
+    @property
+    def url(self):
+        return self._url
+
+    @url.setter
+    def url(self, value):
+        self._url = value
+        self.reset_url()
+
+    @property
+    def port(self):
+        return self._port
+
+    @port.setter
+    def port(self, value):
+        self._port = value
+        self.reset_url()
 
     def reset_url(self):
         self.runner.set_url(self.URL_TEMPLATE.format(self.url, self.port))

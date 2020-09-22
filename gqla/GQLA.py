@@ -13,7 +13,7 @@ from gqla.GQQStorage.GQQStorage import BasicStorage
 
 class GQLA:
     __slots__ = ('_url', '_port', 'name', '_ignore', '_model', '_queries', '_subpid', 'usefolder', 'recursive_depth',
-                 '_depth', 'qStorage', 'executor')
+                 '_depth', 'qStorage', 'executor', '_folder')
 
     INTROSPECTION = {
         'query': '\n    query IntrospectionQuery {\n      __schema {\n        queryType { name }\n        '
@@ -50,6 +50,11 @@ class GQLA:
 
         logging.info(' '.join(['CREATED', 'CLASS', str(self.__class__)]))
 
+        if self.usefolder:
+            self._folder = os.path.join('', self.name)
+            if not os.path.exists(self._folder):
+                os.mkdir(self._folder)
+
     def set_ignore(self, ignore_):
         self._ignore = ignore_
 
@@ -61,7 +66,6 @@ class GQLA:
     def url(self, value):
         self._url = value
         self.executor.url = self._url
-        self.executor.reset_url()
 
     @property
     def port(self):
@@ -71,26 +75,25 @@ class GQLA:
     def port(self, value):
         self._port = value
         self.executor.port = self._port
-        self.executor.reset_url()
 
-    async def query_one(self, query_name, to_file=False, **kwargs):
+    async def query_one(self, query_name, usefolder=False, **kwargs):
 
         result = await self.executor.execute(self._subpid, query_name)
 
         if self.usefolder:
-            if to_file:
-                folder = os.path.join('', self.name)
-                filename = os.path.join(folder, '_' + query_name + '.json')
+            if usefolder:
+                if isinstance(query_name, dict):
+                    query_name = query_name['query'].split('{')[0].strip(' \n').split(' ')[1]
+                    print(query_name)
+                filename = os.path.join(self._folder, '_' + query_name + '.json')
                 logging.info(' '.join(['WRITING', query_name, 'RESULT TO', filename]))
-                if not os.path.exists(folder):
-                    os.mkdir(folder)
                 with open(filename, 'w') as ofs:
                     ofs.write(json.dumps(result, indent=4))
         return result
 
     async def introspection(self):
         logging.info(' '.join(['QUERRYING', self.name, 'INTROSPECTION']))
-        result = await self.query_one(self.INTROSPECTION)
+        result = await self.query_one(self.INTROSPECTION, usefolder=True)
         queries = result['data']['__schema']['types']
 
         self.create_data(queries)
