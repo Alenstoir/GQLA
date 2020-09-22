@@ -58,13 +58,15 @@ class GQLA:
         self.executor.port = self._port
 
     async def query_one(self, query_name, usefolder=False, **kwargs):
-        result = await self.executor.execute(self._subpid, query_name, **kwargs)
+        query = query_name
+        if isinstance(query_name, dict):
+            query_name = query_name['query'].split('{')[0].strip(' \n').split(' ')[1]
+        logging.info("FETCHING " + query_name + " WITH ARGS " + str(kwargs))
+        result = await self.executor.execute(self._subpid, query, **kwargs)
         self._subpid += 1
 
         if self.usefolder:
             if usefolder:
-                if isinstance(query_name, dict):
-                    query_name = query_name['query'].split('{')[0].strip(' \n').split(' ')[1]
                 filename = os.path.join(self._folder, query_name + '.json')
                 logging.info(' '.join(['WRITING', query_name, 'RESULT TO', filename]))
                 with open(filename, 'w') as ofs:
@@ -115,7 +117,7 @@ async def asynchronous():  # Пример работы
 
     for query in helper.qStorage.storage:
         print(helper.qStorage.storage[query].query)
-    result = await helper.query_one('allStellar')
+    result = await helper.query_one('allStellar', usefolder=True, first='5')
     print(result)
 
 

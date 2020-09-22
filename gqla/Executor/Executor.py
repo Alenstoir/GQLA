@@ -97,7 +97,6 @@ class BasicExecutor(AbstractExecutor):
                 instance = self.storage[query]
                 instance.args(params)
                 query = instance.query
-                logging.debug(query)
 
                 query = {
                     'query': self.QUERY_RAW.format(query=query)
