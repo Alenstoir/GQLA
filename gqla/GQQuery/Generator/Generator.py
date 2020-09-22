@@ -48,7 +48,8 @@ class BasicQueryGenerator(AbstractGenerator):
     def generate(self, item):
         if item.kind == 'OBJECT':
             try:
-                subquery_val = self.recursive.run(self.vault.items[item.name], self.vault, self.ignore, self.recursive_depth)
+                subquery_val = self.recursive.run(self.vault.items[item.name], self.vault, self.ignore,
+                                                  self.recursive_depth)
             except RecursionError:
                 raise
             return ' {' + ' '.join(subquery_val) + '}'
