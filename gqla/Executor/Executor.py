@@ -5,7 +5,7 @@ import logging
 import aiohttp
 import requests
 
-from gqla.abstracts.abstracts import AbstractExecutor, AbstractRunner
+from gqla.abstracts import AbstractExecutor, AbstractRunner
 
 
 class AsyncRunner(AbstractRunner):
