@@ -108,11 +108,8 @@ class GQLA:
 
 async def asynchronous():  # Пример работы
     helper = GQLA('solar', url='localhost', port='8080', usefolder=True)
-
     ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor', 'parent1']
-
     helper.set_ignore(ignore)
-
     await helper.introspection()
 
     for query in helper.qStorage.storage:

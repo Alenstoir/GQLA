@@ -1,5 +1,5 @@
-from gqla.GQQuery.GQQueriy import BasicQuery
 from gqla.GQQuery.Generator import RecursiveRule, NormalRule, BasicQueryGenerator
+from gqla.GQQuery.GQQuery import BasicQuery
 
 __all__ = [
     BasicQuery,
