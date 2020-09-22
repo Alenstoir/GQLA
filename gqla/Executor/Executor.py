@@ -6,7 +6,7 @@ import aiohttp
 import requests
 
 from gqla.abstracts import AbstractExecutor, AbstractRunner
-from gqla.statics.queries import RAW, BASE_TEMPLATE
+from gqla.statics import RAW, BASE_TEMPLATE
 
 
 class AsyncRunner(AbstractRunner):

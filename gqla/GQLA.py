@@ -5,11 +5,11 @@ import logging
 import logging.config
 import os.path
 
-from gqla.Executor.Executor import BasicExecutor
-from gqla.GQLModel.GQLModel import GQModel
-from gqla.GQLStorage.GQLStorage import TypeFactory
-from gqla.GQQStorage.GQQStorage import BasicStorage
-from gqla.statics.queries import INTROSPECTION
+from gqla.Executor import BasicExecutor
+from gqla.GQLModel import GQModel
+from gqla.GQLStorage import TypeFactory
+from gqla.GQQStorage import BasicStorage
+from gqla.statics import INTROSPECTION
 
 
 class GQLA:

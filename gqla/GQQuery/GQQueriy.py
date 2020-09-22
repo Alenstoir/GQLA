@@ -1,4 +1,4 @@
-from gqla.GQQuery.Generator import BasicQueryGenerator
+from gqla.GQQuery import BasicQueryGenerator
 from gqla.abstracts import AbstractQuery
 
 
