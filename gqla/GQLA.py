@@ -108,7 +108,7 @@ async def asynchronous():  # Пример работы
 
     for query in helper.qStorage.storage:
         print(helper.qStorage.storage[query].query)
-    result = await helper.query_one('allPlanets')
+    result = await helper.query_one('allStellar')
     print(result)
 
 
