@@ -9,32 +9,12 @@ from gqla.Executor.Executor import BasicExecutor
 from gqla.GQLModel.GQLModel import GQModel
 from gqla.GQLStorage.GQLStorage import TypeFactory
 from gqla.GQQStorage.GQQStorage import BasicStorage
+from gqla.statics.queries import INTROSPECTION
 
 
 class GQLA:
     __slots__ = ('_url', '_port', 'name', '_ignore', '_model', '_queries', '_subpid', 'usefolder', 'recursive_depth',
-                 '_depth', 'qStorage', 'executor', '_folder')
-
-    INTROSPECTION = {
-        'query': '\n    query IntrospectionQuery {\n      __schema {\n        queryType { name }\n        '
-                 'mutationType { name }\n        subscriptionType { name }\n        types {\n          ...FullType\n  '
-                 '      }\n        directives {\n          name\n          description\n          locations\n         '
-                 ' args {\n            ...InputValue\n          }\n        }\n      }\n    }\n\n    fragment FullType '
-                 'on __Type {\n      kind\n      name\n      description\n      fields(includeDeprecated: true) {\n   '
-                 '     name\n        description\n        args {\n          ...InputValue\n        }\n        type {'
-                 '\n          ...TypeRef\n        }\n        isDeprecated\n        deprecationReason\n      }\n      '
-                 'inputFields {\n        ...InputValue\n      }\n      interfaces {\n        ...TypeRef\n      }\n    '
-                 '  enumValues(includeDeprecated: true) {\n        name\n        description\n        isDeprecated\n  '
-                 '      deprecationReason\n      }\n      possibleTypes {\n        ...TypeRef\n      }\n    }\n\n    '
-                 'fragment InputValue on __InputValue {\n      name\n      description\n      type { ...TypeRef }\n   '
-                 '   defaultValue\n    }\n\n    fragment TypeRef on __Type {\n      kind\n      name\n      ofType {'
-                 '\n        kind\n        name\n        ofType {\n          kind\n          name\n          ofType {'
-                 '\n            kind\n            name\n            ofType {\n              kind\n              '
-                 'name\n              ofType {\n                kind\n                name\n                ofType {'
-                 '\n                  kind\n                  name\n                  ofType {\n                    '
-                 'kind\n                    name\n                  }\n                }\n              }\n           '
-                 ' }\n          }\n        }\n      }\n    }\n  ',
-        'variables': {}, 'operationName': None}
+                 '_depth', 'qStorage', 'executor', '_folder', '_pretty')
 
     def __init__(self, name, url=None, port=None, ignore=None, usefolder=False, recursive_depth=5):
         self._subpid = 0
@@ -43,6 +23,7 @@ class GQLA:
         self.name = name
         self._url = url
         self._port = port
+        self._pretty = False
         self.usefolder = usefolder
         self.recursive_depth = recursive_depth
         self.qStorage = None
@@ -77,23 +58,26 @@ class GQLA:
         self.executor.port = self._port
 
     async def query_one(self, query_name, usefolder=False, **kwargs):
-
-        result = await self.executor.execute(self._subpid, query_name)
+        result = await self.executor.execute(self._subpid, query_name, **kwargs)
+        self._subpid += 1
 
         if self.usefolder:
             if usefolder:
                 if isinstance(query_name, dict):
                     query_name = query_name['query'].split('{')[0].strip(' \n').split(' ')[1]
-                    print(query_name)
-                filename = os.path.join(self._folder, '_' + query_name + '.json')
+                filename = os.path.join(self._folder, query_name + '.json')
                 logging.info(' '.join(['WRITING', query_name, 'RESULT TO', filename]))
                 with open(filename, 'w') as ofs:
-                    ofs.write(json.dumps(result, indent=4))
+                    if self._pretty:
+                        indent = 4
+                    else:
+                        indent = None
+                    ofs.write(json.dumps(result, indent=indent))
         return result
 
     async def introspection(self):
         logging.info(' '.join(['QUERRYING', self.name, 'INTROSPECTION']))
-        result = await self.query_one(self.INTROSPECTION, usefolder=True)
+        result = await self.query_one(INTROSPECTION, usefolder=True)
         queries = result['data']['__schema']['types']
 
         self.create_data(queries)
