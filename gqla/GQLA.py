@@ -92,7 +92,7 @@ class GQLA:
             if obj is not None:
                 self._model.add_item(obj.parse(item))
 
-    def generate_queries(self, specific=False):
+    def generate_queries(self):
         self.qStorage = BasicStorage()
         if 'Query' in self._model.items:
             queries = self._model.items['Query'].fields
@@ -107,15 +107,16 @@ class GQLA:
 
 
 async def asynchronous():  # Пример работы
-    helper = GQLA('solar', url='localhost', port='8080', usefolder=True)
     ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor', 'parent1']
-    helper.set_ignore(ignore)
+
+    helper = GQLA('solar', url='localhost', port='8080', usefolder=True, ignore=ignore)
     await helper.introspection()
+    result = await helper.query_one('allStellar', usefolder=True, first='5')
 
     for query in helper.qStorage.storage:
         print(helper.qStorage.storage[query].query)
-    result = await helper.query_one('allStellar', usefolder=True, first='5')
     print(result)
+
 
 
 if __name__ == "__main__":
