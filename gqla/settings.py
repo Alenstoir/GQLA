@@ -1,5 +1,4 @@
 import os
-from dotenv import load_dotenv
 
 try:
     with open('../VERSION', 'r') as v_file:
@@ -8,8 +7,8 @@ except FileNotFoundError or FileExistsError:
     VERSION = 'UNDEFINED'
 
 LOG_LEVEL_PROJECT = os.getenv('LOG_LEVEL_PROJECT', 'DEBUG')
-LOG_FORMAT_PROJECT = os.getenv('LOG_FORMAT_PROJECT', '%(levelname)-8s# %(filename)s[LINE:%(lineno)d] [%(asctime)s.%(msecs)d]:  %(message)s')
-
+LOG_FORMAT_PROJECT = os.getenv('LOG_FORMAT_PROJECT',
+                               '%(levelname)-8s# %(filename)s[LINE:%(lineno)d] [%(asctime)s.%(msecs)d]:  %(message)s')
 
 LOGGING_BASE_CONFIG = {
     'version': 1,

@@ -6,25 +6,30 @@ import aiohttp
 import requests
 
 from gqla.abstracts import AbstractExecutor, AbstractRunner
-from gqla.statics import RAW, BASE_TEMPLATE
 
 
 class AsyncRunner(AbstractRunner):
 
-    def __init__(self):
-        self.url = None
+    def __init__(self, properties=None):
+        super().__init__()
+        self._properties = properties
 
-    def set_url(self, url):
-        self.url = url
+    @property
+    def properties(self):
+        return self._properties
+
+    @properties.setter
+    def properties(self, value):
+        self._properties = value
 
     def _can_query(self):
-        if self.url is None:
+        if self._properties.url is None:
             raise AttributeError
 
     async def run(self, pid, query):
         self._can_query()
         logging.info('Fetch async process {} started'.format(pid))
-        async with aiohttp.request('POST', self.url, json=query) as resp:
+        async with aiohttp.request('POST', self._properties.url_string, json=query) as resp:
             response = await resp.text()
         logging.info('Fetch async process {} ended'.format(pid))
         return json.loads(response)
@@ -32,60 +37,59 @@ class AsyncRunner(AbstractRunner):
 
 class SyncRunner(AbstractRunner):
 
+    def __init__(self, properties=None):
+        super().__init__()
+        self._properties = properties
+
+    @property
+    def properties(self):
+        return self._properties
+
+    @properties.setter
+    def properties(self, value):
+        self._properties = value
+
     def _can_query(self):
-        if self.url is None:
+        if self._properties.url is None:
             raise AttributeError
-
-    def __init__(self):
-        self.url = None
-
-    def set_url(self, url):
-        self.url = url
 
     def run(self, pid, query):
         self._can_query()
         logging.info('Fetch sync process {} started'.format(pid))
-        response = requests.post(self.url, json=query)
+        response = requests.post(self._properties.url_string, json=query)
         logging.info('Fetch async process {} ended'.format(pid))
         return json.loads(response.text)
 
 
 class BasicExecutor(AbstractExecutor):
 
-    def __init__(self, url, port, storage, raw=RAW, template=BASE_TEMPLATE, runner=AsyncRunner()):
-        self._url = url
-        self._port = port
+    def __init__(self, properties=None, storage=None, runner=AsyncRunner()):
+        super().__init__()
+        self._properties = properties
         self._storage = storage
-        self.storage = storage.storage if storage is not None else None
-        self.QUERY_RAW = raw
-        self.URL_TEMPLATE = template
         self.runner = runner
-        self.reset_url()
+        runner.properties = properties
 
     @property
-    def url(self):
-        return self._url
+    def properties(self):
+        return self._properties
 
-    @url.setter
-    def url(self, value):
-        self._url = value
-        self.reset_url()
+    @properties.setter
+    def properties(self, value):
+        self._properties = value
+        self.runner.properties = value
 
     @property
-    def port(self):
-        return self._port
+    def storage(self):
+        return self._storage.storage if self._storage is not None else None
 
-    @port.setter
-    def port(self, value):
-        self._port = value
-        self.reset_url()
-
-    def reset_url(self):
-        self.runner.set_url(self.URL_TEMPLATE.format(self.url, self.port))
+    @storage.setter
+    def storage(self, value):
+        self._storage = value
 
     async def execute(self, pid='N/A', query=None, **kwargs):
-        if self._storage is not None:
-            self.storage = self._storage.storage
+        if self._storage is None:
+            raise AttributeError
         if query is None:
             raise AttributeError
         if len(kwargs) > 0:
@@ -93,19 +97,15 @@ class BasicExecutor(AbstractExecutor):
         else:
             params = ''
         if self.storage is not None:
-            if query in self.storage:
+            if str(query) in self.storage:
                 instance = self.storage[query]
                 instance.args(params)
                 query = instance.query
 
                 query = {
-                    'query': self.QUERY_RAW.format(query=query)
+                    'query': self._properties.raw_query.format(query=query)
                 }
         futures = [self.runner.run(pid, query=query)]
         done, pending = await asyncio.wait(futures)
         result = done.pop().result()
         return result
-
-
-
-

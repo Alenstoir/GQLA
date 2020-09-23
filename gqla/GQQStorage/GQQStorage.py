@@ -1,25 +1,34 @@
-from gqla.GQQuery import BasicQueryGenerator, NormalRule, RecursiveRule
 from gqla.GQQuery import BasicQuery
+from gqla.GQQuery import BasicQueryGenerator, NormalRule, RecursiveRule
 from gqla.abstracts import AbstractQuery, AbstractStorage
 
 
 class BasicStorage(AbstractStorage):
 
-    def __init__(self):
+    def __init__(self, properties=None, generator=BasicQueryGenerator(NormalRule(), RecursiveRule())):
+        super().__init__()
         self._query = {}
+        self.generator = generator
+        self._properties = properties
+        self.generator.properties = properties
 
-    def add(self, name: str, query: AbstractQuery):
-        self._query[name] = query
+    @property
+    def properties(self):
+        return self._properties
+
+    @properties.setter
+    def properties(self, value):
+        self._properties = value
+        self.generator.properties = value
 
     @property
     def storage(self):
         return self._query
 
-    def create(self, name, item, model, ignore, recursive_depth):
-        generator = BasicQueryGenerator(NormalRule(), RecursiveRule(), model, ignore, recursive_depth)
-        query = BasicQuery(name, generator, item)
+    def add(self, name: str, query: AbstractQuery):
+        self._query[name] = query
+
+    def create(self, name, item, recursive_depth):
+        query = BasicQuery(name, self.generator, item)
         query.regenerate()
         self.add(name, query)
-
-
-

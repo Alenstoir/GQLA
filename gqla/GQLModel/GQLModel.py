@@ -1,7 +1,7 @@
-from gqla.abstracts import GQBaseModel, GQBase
+from gqla.abstracts import AbstractModel, GQBase
 
 
-class GQModel(GQBaseModel):
+class GQModel(AbstractModel):
 
     def __init__(self):
         self._items = {}

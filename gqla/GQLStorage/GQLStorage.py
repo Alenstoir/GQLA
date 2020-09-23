@@ -108,7 +108,7 @@ class GQOBJECT(GQBase):
         return self
 
 
-def TypeFactory(kind): # noqa
+def TypeFactory(kind):  # noqa
     class_name = kind['kind']
     possibles = globals().copy()
     possibles.update(locals())

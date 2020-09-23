@@ -1,6 +1,5 @@
 import asyncio
 import json
-
 import logging
 import logging.config
 import os.path
@@ -9,25 +8,41 @@ from gqla.Executor import BasicExecutor
 from gqla.GQLModel import GQModel
 from gqla.GQLStorage import TypeFactory
 from gqla.GQQStorage import BasicStorage
-from gqla.statics import INTROSPECTION
+from gqla.VerticalStorage import VerticalGeneratorProperties, VerticalUrlProperties
+from gqla.abstracts import AbstractStorage, AbstractExecutor
+from gqla.statics import INTROSPECTION, BASE_TEMPLATE, RAW
 
 
 class GQLA:
-    __slots__ = ('_url', '_port', 'name', '_ignore', '_model', '_queries', '_subpid', 'usefolder', 'recursive_depth',
-                 '_depth', 'qStorage', 'executor', '_folder', '_pretty')
+    __slots__ = ('name', '_subpid', 'usefolder', '_depth', '_folder', '_pretty', '_qStorage', '_executor',
+                 '_gen_properties', '_url_properties')
 
-    def __init__(self, name, url=None, port=None, ignore=None, usefolder=False, recursive_depth=5):
-        self._subpid = 0
-        self._model = None
-        self._ignore = ignore
-        self.name = name
-        self._url = url
-        self._port = port
-        self._pretty = False
+    def __init__(self, name, url=None, port=None, ignore=None, only=None, usefolder=False, recursive_depth=5):
+        super().__init__()
+
+        self._executor = None
+        self._qStorage = None
+
+        self._gen_properties = VerticalGeneratorProperties()
+        self._url_properties = VerticalUrlProperties()
+        self.qStorage = BasicStorage(self._gen_properties)
+        self.executor = BasicExecutor(self._url_properties, storage=self.qStorage)
+
+        self._gen_properties.model = GQModel()
+        self._gen_properties.ignore = ignore
+        self._gen_properties.only = only
+        self._gen_properties.recursive_depth = recursive_depth
+
+        self._url_properties.url = url
+        self._url_properties.port = port
+        self._url_properties.template = BASE_TEMPLATE
+        self._url_properties.introspection = INTROSPECTION
+        self._url_properties.raw_query = RAW
+
         self.usefolder = usefolder
-        self.recursive_depth = recursive_depth
-        self.qStorage = None
-        self.executor = BasicExecutor(url, port, self.qStorage)
+        self._pretty = False
+        self.name = name
+        self._subpid = 0
 
         logging.info(' '.join(['CREATED', 'CLASS', str(self.__class__)]))
 
@@ -36,26 +51,71 @@ class GQLA:
             if not os.path.exists(self._folder):
                 os.mkdir(self._folder)
 
-    def set_ignore(self, ignore_):
-        self._ignore = ignore_
+    @property
+    def executor(self):
+        return self._executor
+
+    @executor.setter
+    def executor(self, value: AbstractExecutor):
+        self._executor = value
 
     @property
     def url(self):
-        return self._url
+        return self._url_properties.url
 
     @url.setter
     def url(self, value):
-        self._url = value
-        self.executor.url = self._url
+        self._url_properties.url = value
 
     @property
     def port(self):
-        return self._port
+        return self._url_properties.port
 
     @port.setter
     def port(self, value):
-        self._port = value
-        self.executor.port = self._port
+        self._url_properties.port = value
+
+    @property
+    def qStorage(self):
+        return self._qStorage
+
+    @qStorage.setter
+    def qStorage(self, value: AbstractStorage):
+        self._qStorage = value
+        if self.executor is not None:
+            self.executor.storage = value
+
+    @property
+    def ignore(self):
+        return self._gen_properties.ignore
+
+    @ignore.setter
+    def ignore(self, value):
+        self._gen_properties.ignore = value
+
+    @property
+    def only(self):
+        return self._gen_properties.only
+
+    @only.setter
+    def only(self, value):
+        self._gen_properties.only = value
+
+    @property
+    def recursive_depth(self):
+        return self._gen_properties.recursive_depth
+
+    @recursive_depth.setter
+    def recursive_depth(self, value):
+        self._gen_properties.recursive_depth = value
+
+    @property
+    def model(self):
+        return self._gen_properties.model
+
+    @model.setter
+    def model(self, value):
+        self._gen_properties.model = value
 
     async def query_one(self, query_name, usefolder=False, **kwargs):
         query = query_name
@@ -86,37 +146,36 @@ class GQLA:
         self.generate_queries()
 
     def create_data(self, data):
-        self._model = GQModel()
         for item in data:
             obj = TypeFactory(item)
             if obj is not None:
-                self._model.add_item(obj.parse(item))
+                self.model.add_item(obj.parse(item))
 
     def generate_queries(self):
-        self.qStorage = BasicStorage()
-        if 'Query' in self._model.items:
-            queries = self._model.items['Query'].fields
-        elif 'Queries' in self._model.items:
-            queries = self._model.items['Queries'].fields
+        if 'Query' in self.model.items:
+            queries = self.model.items['Query'].fields
+        elif 'Queries' in self.model.items:
+            queries = self.model.items['Queries'].fields
         else:
             raise NotImplementedError
 
         for query in queries:
-            self.qStorage.create(query, queries[query], self._model, self._ignore, self.recursive_depth)
+            self.qStorage.create(query, queries[query], self.recursive_depth)
         self.executor._storage = self.qStorage
 
 
 async def asynchronous():  # Пример работы
     ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor', 'parent1']
+    only = ['edges', 'node', 'code', 'name']
 
     helper = GQLA('solar', url='localhost', port='8080', usefolder=True, ignore=ignore)
+    helper.only = only
     await helper.introspection()
     result = await helper.query_one('allStellar', usefolder=True, first='5')
 
     for query in helper.qStorage.storage:
         print(helper.qStorage.storage[query].query)
     print(result)
-
 
 
 if __name__ == "__main__":

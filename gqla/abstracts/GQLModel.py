@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
+
 from gqla.abstracts.GQLStorage import GQBase
 
 
-class GQBaseModel(ABC):
+class AbstractModel(ABC):
 
     @property
     @abstractmethod
