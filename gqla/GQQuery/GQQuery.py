@@ -1,5 +1,4 @@
-from gqla.GQQuery import BasicQueryGenerator
-from gqla.abstracts import AbstractQuery
+from gqla.abstracts import AbstractQuery, AbstractGenerator
 
 
 class BasicQuery(AbstractQuery):
@@ -27,14 +26,14 @@ class BasicQuery(AbstractQuery):
         return self._generator
 
     @generator.setter
-    def generator(self, value: BasicQueryGenerator):
+    def generator(self, value: AbstractGenerator):
         self._generator = value
 
     def args(self, args: list):
         self._args = args
 
-    def regenerate(self):
-        self._body = self.generator.generate(self._item)
+    def regenerate(self, only_fields):
+        self._body = self.generator.generate(self._item, only_fields)
 
     @property
     def query(self):

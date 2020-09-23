@@ -28,7 +28,7 @@ class BasicStorage(AbstractStorage):
     def add(self, name: str, query: AbstractQuery):
         self._query[name] = query
 
-    def create(self, name, item, recursive_depth):
+    def create(self, name, item, recursive_depth, only_fields=False):
         query = BasicQuery(name, self.generator, item)
-        query.regenerate()
+        query.regenerate(only_fields)
         self.add(name, query)

@@ -117,10 +117,12 @@ class GQLA:
     def model(self, value):
         self._gen_properties.model = value
 
-    async def query_one(self, query_name, usefolder=False, **kwargs):
+    async def query_one(self, query_name, only_fields=False, usefolder=False, **kwargs):
         query = query_name
         if isinstance(query_name, dict):
             query_name = query_name['query'].split('{')[0].strip(' \n').split(' ')[1]
+        if only_fields:
+            self.generate_queries(specific=query_name, only_fields=only_fields)
         logging.info("FETCHING " + query_name + " WITH ARGS " + str(kwargs))
         result = await self.executor.execute(self._subpid, query, **kwargs)
         self._subpid += 1
@@ -151,16 +153,25 @@ class GQLA:
             if obj is not None:
                 self.model.add_item(obj.parse(item))
 
-    def generate_queries(self):
+    def generate_queries(self, specific=False, only_fields=False):
         if 'Query' in self.model.items:
             queries = self.model.items['Query'].fields
         elif 'Queries' in self.model.items:
             queries = self.model.items['Queries'].fields
         else:
             raise NotImplementedError
+        if not specific:
+            for query in queries:
+                self.qStorage.create(query, queries[query], self.recursive_depth)
+        else:
+            for query in queries:
+                if query == specific:
+                    if not only_fields:
+                        self.qStorage.create(query, queries[query], self.recursive_depth, only_fields)
+                    else:
 
-        for query in queries:
-            self.qStorage.create(query, queries[query], self.recursive_depth)
+                        pass
+
         self.executor._storage = self.qStorage
 
 
@@ -177,6 +188,8 @@ async def asynchronous():  # Пример работы
         print(helper.qStorage.storage[query].query)
     print(result)
 
+    result = await helper.query_one('allStellar', usefolder=True, only_fields=True, first='5')
+    print(result)
 
 if __name__ == "__main__":
     from gqla.settings import LOGGING_BASE_CONFIG

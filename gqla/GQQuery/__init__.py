@@ -1,5 +1,5 @@
-from gqla.GQQuery.GQQuery import BasicQuery
-from gqla.GQQuery.Generator import RecursiveRule, NormalRule, BasicQueryGenerator
+from gqla.GQQuery.Generator import RecursiveRule, NormalRule, BasicQueryGenerator  # nolint
+from gqla.GQQuery.GQQuery import BasicQuery  # nolint
 
 __all__ = [
     BasicQuery,
