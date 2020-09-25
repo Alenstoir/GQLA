@@ -33,7 +33,6 @@ class RecursiveRule(AbstractRule):
 
     def run(self, item, only_fields=False, depth=0, force=False):
         query = []
-        print(len(item.fields))
         for field in item.fields:
             if field in self._properties.ignore:
                 continue

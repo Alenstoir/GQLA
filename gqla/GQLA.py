@@ -195,7 +195,7 @@ async def asynchronous():  # Пример работы
         print(helper.qStorage.storage[query].query)
     print(result)
 
-    result = await helper.query_one('allStellar', usefolder=True, only_fields=True)
+    result = await helper.query_one('allStellar', usefolder=False, only_fields=True)
     print(result)
 
 if __name__ == "__main__":
