@@ -127,6 +127,7 @@ class GQLA:
             query_name = query_name['query'].split('{')[0].strip(' \n').split(' ')[1]
         if only_fields:
             self.generate_queries(specific=query_name, only_fields=only_fields)
+            query_name = query = "only_" + query_name
         logging.info("FETCHING " + query_name + " WITH ARGS " + str(kwargs))
         result = await self.executor.execute(self._subpid, query, **kwargs)
         self._subpid += 1
@@ -166,11 +167,12 @@ class GQLA:
             raise NotImplementedError
         if not specific:
             for query in queries:
-                self.qStorage.create(query, queries[query], self.recursive_depth)
+                self.qStorage.create(query, query, queries[query], self.recursive_depth)
         else:
             for query in queries:
                 if query == specific:
-                    self.qStorage.create(query, queries[query], self.recursive_depth, only_fields)
+                    query_name = query if not only_fields else "only_" + query
+                    self.qStorage.create(query_name, query, queries[query], self.recursive_depth, only_fields)
 
         self.executor._storage = self.qStorage
 
@@ -189,13 +191,11 @@ async def asynchronous():  # Пример работы
     helper.only = only
     helper._pretty = True
     await helper.introspection()
-    result = await helper.query_one('allStellar', usefolder=True, filters={'not': {'objectType': 'planet'}}, first='5')
 
-    for query in helper.qStorage.storage:
-        print(helper.qStorage.storage[query].query)
+    result = await helper.query_one('allStellar', usefolder=True, filters={'not': {'objectType': 'planet'}}, first='5')
     print(result)
 
-    result = await helper.query_one('allStellar', usefolder=False, only_fields=True)
+    result = await helper.query_one('allStellar', usefolder=False, only_fields=True, first='1')
     print(result)
 
 if __name__ == "__main__":
