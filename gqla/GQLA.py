@@ -51,6 +51,8 @@ class GQLA:
             if not os.path.exists(self._folder):
                 os.mkdir(self._folder)
 
+    # Getters\Setters
+
     @property
     def executor(self):
         return self._executor
@@ -117,6 +119,8 @@ class GQLA:
     def model(self, value):
         self._gen_properties.model = value
 
+    # Getters\Setters
+
     async def query_one(self, query_name, only_fields=False, usefolder=False, **kwargs):
         query = query_name
         if isinstance(query_name, dict):
@@ -166,21 +170,24 @@ class GQLA:
         else:
             for query in queries:
                 if query == specific:
-                    if not only_fields:
-                        self.qStorage.create(query, queries[query], self.recursive_depth, only_fields)
-                    else:
-
-                        pass
+                    self.qStorage.create(query, queries[query], self.recursive_depth, only_fields)
 
         self.executor._storage = self.qStorage
 
 
+"""
+This file defines main class which is used to generate and query GraphQL queries
+All what lies bellow is standalone support 
+"""
+
+
 async def asynchronous():  # Пример работы
     ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor', 'parent1']
-    only = ['edges', 'node', 'code', 'name']
+    only = ['edges', 'node', 'code', 'name', 'StarObject', 'PlanetObject', 'orbitals']
 
-    helper = GQLA('solar', url='localhost', port='8080', usefolder=True, ignore=ignore)
+    helper = GQLA('solar', url='localhost', port='8080', usefolder=True, ignore=ignore, recursive_depth=10)
     helper.only = only
+    helper._pretty = True
     await helper.introspection()
     result = await helper.query_one('allStellar', usefolder=True, first='5')
 
@@ -188,7 +195,7 @@ async def asynchronous():  # Пример работы
         print(helper.qStorage.storage[query].query)
     print(result)
 
-    result = await helper.query_one('allStellar', usefolder=True, only_fields=True, first='5')
+    result = await helper.query_one('allStellar', usefolder=True, only_fields=True)
     print(result)
 
 if __name__ == "__main__":

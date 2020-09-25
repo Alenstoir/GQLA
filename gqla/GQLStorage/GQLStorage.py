@@ -28,6 +28,38 @@ class GQENUM(GQBase):
         return self
 
 
+class GQUNION(GQBase):
+
+    def __init__(self, name, kind):
+        super().__init__(name, kind)
+        self.fields = {}
+
+    def add_field(self, name, field: GQBase):
+        self.fields[name] = field
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def kind(self):
+        return self._kind
+
+    def __repr__(self):
+        answer = ','.join(['name: ' + self.name, ' kind:' + self.kind, ' fields:['])
+        for field in self.fields:
+            answer += '... on ' + field + ' {' + str(self.fields[field]) + '},'
+        answer = answer.strip(',') + ']'
+        return answer
+
+    def parse(self, item):
+        if 'possibleTypes' in item:
+            for object_ in item['possibleTypes']:
+                obj = TypeFactory(object_)
+                self.add_field(object_['name'], obj.parse(object_))
+        return self
+
+
 class GQJSON(GQBase):
 
     def __init__(self, name, kind):

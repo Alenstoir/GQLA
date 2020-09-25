@@ -34,10 +34,12 @@ class RecursiveRule(AbstractRule):
     def run(self, item, only_fields=False, depth=0):
         query = []
         for field in item.fields:
-            if item.fields[field].kind == "OBJECT":
-                if not only_fields and field not in self._properties.only:
-                    if field in self._properties.ignore:
-                        continue
+            if field in self._properties.ignore:
+                continue
+            if only_fields:
+                if field not in self._properties.only:
+                    continue
+            if item.fields[field].kind in ["OBJECT", "UNION"]:
                 depth += 1
                 subquery_val = item.fields[field].name
                 subquery_val = self._properties.model.items[subquery_val]
@@ -45,11 +47,11 @@ class RecursiveRule(AbstractRule):
                 depth -= 1
                 if subquery_val is None:
                     continue
+                if item.fields[field].kind == 'UNION':
+                    for i in range(len(subquery_val)):
+                        subquery_val[i] = '... on ' + subquery_val[i]
                 query.append((str(field) + ' {' + ' '.join(subquery_val) + '}'))
             else:
-                if not only_fields and field not in self._properties.only:
-                    if field in self._properties.ignore:
-                        continue
                 query.append(field)
                 if depth >= self._properties.recursive_depth:
                     return query
