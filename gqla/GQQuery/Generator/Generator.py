@@ -93,4 +93,4 @@ class BasicQueryGenerator(AbstractGenerator):
                 raise
             return ' {' + ' '.join(subquery_val) + '}'
         else:
-            return self.normal.run(self._properties.model.items[item])
+            return self.normal.run(self._properties.model.items[item.name])
