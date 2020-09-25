@@ -5,7 +5,7 @@ from gqla.abstracts import AbstractQuery, AbstractStorage
 
 class BasicStorage(AbstractStorage):
 
-    def __init__(self, properties=None, generator=BasicQueryGenerator(NormalRule(), RecursiveRule())):
+    def __init__(self, properties=None, generator=None):
         super().__init__()
         self._query = {}
         self.generator = generator

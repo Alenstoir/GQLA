@@ -8,6 +8,7 @@ from gqla.Executor import BasicExecutor
 from gqla.GQLModel import GQModel
 from gqla.GQLStorage import TypeFactory
 from gqla.GQQStorage import BasicStorage
+from gqla.GQQuery import NormalRule, RecursiveRule, BasicQueryGenerator
 from gqla.VerticalStorage import VerticalGeneratorProperties, VerticalUrlProperties
 from gqla.abstracts import AbstractStorage, AbstractExecutor
 from gqla.statics import INTROSPECTION, BASE_TEMPLATE, RAW
@@ -15,7 +16,7 @@ from gqla.statics import INTROSPECTION, BASE_TEMPLATE, RAW
 
 class GQLA:
     __slots__ = ('name', '_subpid', 'usefolder', '_depth', '_folder', '_pretty', '_qStorage', '_executor',
-                 '_gen_properties', '_url_properties')
+                 '_gen_properties', '_url_properties', '_default_normal_rule', '_default_recursive_rule', '_default_gen')
 
     def __init__(self, name, url=None, port=None, ignore=None, only=None, usefolder=False, recursive_depth=5):
         super().__init__()
@@ -25,7 +26,10 @@ class GQLA:
 
         self._gen_properties = VerticalGeneratorProperties()
         self._url_properties = VerticalUrlProperties()
-        self.qStorage = BasicStorage(self._gen_properties)
+        self._default_normal_rule = NormalRule()
+        self._default_recursive_rule = RecursiveRule()
+        self._default_gen = BasicQueryGenerator(self._default_normal_rule, self._default_recursive_rule)
+        self.qStorage = BasicStorage(self._gen_properties, self._default_gen)
         self.executor = BasicExecutor(self._url_properties, storage=self.qStorage)
 
         self._gen_properties.model = GQModel()
@@ -187,16 +191,17 @@ async def asynchronous():  # Пример работы
     ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor', 'parent1', 'id']
     only = ['edges', 'node', 'code', 'name', 'StarObject', 'PlanetObject', 'orbitals']
 
-    helper = GQLA('solar', url='localhost', port='8080', usefolder=True, ignore=ignore, recursive_depth=5)
+    helper = GQLA('target', url='10.10.127.19', port='8080', usefolder=True, ignore=ignore, recursive_depth=5)
     helper.only = only
     helper._pretty = True
     await helper.introspection()
-
-    result = await helper.query_one('allStellar', usefolder=True, filters={'not': {'objectType': 'planet'}}, first='5')
+    result = await helper.query_one('allCountry', usefolder=True)
     print(result)
-
-    result = await helper.query_one('allStellar', usefolder=False, only_fields=True, first='1')
-    print(result)
+    # result = await helper.query_one('allStellar', usefolder=True, filters={'not': {'objectType': 'planet'}}, first='5')
+    # print(result)
+    #
+    # result = await helper.query_one('allStellar', usefolder=False, only_fields=True, first='1')
+    # print(result)
 
 if __name__ == "__main__":
     from gqla.settings import LOGGING_BASE_CONFIG
