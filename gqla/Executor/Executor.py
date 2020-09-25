@@ -93,7 +93,10 @@ class BasicExecutor(AbstractExecutor):
         if query is None:
             raise AttributeError
         if len(kwargs) > 0:
-            params = "(" + str(kwargs).replace("'", '').replace('{', '').replace('}', '') + ")"
+            params = "("
+            for item in kwargs:
+                params += ":".join([item, str(kwargs[item]).replace("'", '')])
+            params += ")"
         else:
             params = ''
         if self.storage is not None:
