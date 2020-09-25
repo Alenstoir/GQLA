@@ -5,7 +5,7 @@ from gqla.abstracts.GQLStorage import GQBase
 from gqla.abstracts.GQQStorage import AbstractStorage
 from gqla.abstracts.GQQery import AbstractQuery
 
-__all__: [
+__all__ = [
     GQBase,
     AbstractStorage,
     AbstractRule,
