@@ -185,7 +185,7 @@ async def asynchronous():  # Пример работы
     ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor', 'parent1']
     only = ['edges', 'node', 'code', 'name', 'StarObject', 'PlanetObject', 'orbitals']
 
-    helper = GQLA('solar', url='localhost', port='8080', usefolder=True, ignore=ignore, recursive_depth=10)
+    helper = GQLA('solar', url='localhost', port='8080', usefolder=True, ignore=ignore, recursive_depth=5)
     helper.only = only
     helper._pretty = True
     await helper.introspection()

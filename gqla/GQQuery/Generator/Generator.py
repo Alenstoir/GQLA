@@ -31,8 +31,9 @@ class RecursiveRule(AbstractRule):
     def properties(self, value):
         self._properties = value
 
-    def run(self, item, only_fields=False, depth=0):
+    def run(self, item, only_fields=False, depth=0, force=False):
         query = []
+        print(len(item.fields))
         for field in item.fields:
             if field in self._properties.ignore:
                 continue
@@ -40,21 +41,23 @@ class RecursiveRule(AbstractRule):
                 if field not in self._properties.only:
                     continue
             if item.fields[field].kind in ["OBJECT", "UNION"]:
-                depth += 1
-                subquery_val = item.fields[field].name
-                subquery_val = self._properties.model.items[subquery_val]
-                subquery_val = self.run(subquery_val, only_fields, depth)
-                depth -= 1
-                if subquery_val is None:
-                    continue
-                if item.fields[field].kind == 'UNION':
-                    for i in range(len(subquery_val)):
-                        subquery_val[i] = '... on ' + subquery_val[i]
-                query.append((str(field) + ' {' + ' '.join(subquery_val) + '}'))
+                if force or depth <= self._properties.recursive_depth:
+                    depth += 1
+                    subquery_val = item.fields[field].name
+                    subquery_val = self._properties.model.items[subquery_val]
+                    subquery_val = self.run(subquery_val, only_fields, depth)
+                    depth -= 1
+                    if subquery_val is None:
+                        continue
+                    if item.fields[field].kind == 'UNION':
+                        for i in range(len(subquery_val)):
+                            subquery_val[i] = '... on ' + subquery_val[i]
+                    query.append((str(field) + ' {' + ' '.join(subquery_val) + '}'))
             else:
-                query.append(field)
-                if depth >= self._properties.recursive_depth:
-                    return query
+                if not force:
+                    query.append(field)
+        if not query:
+            return self.run(item, only_fields, depth, force=True)
         return query
 
 
