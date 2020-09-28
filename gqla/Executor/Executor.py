@@ -63,7 +63,7 @@ class SyncRunner(AbstractRunner):
 
 class BasicExecutor(AbstractExecutor):
 
-    def __init__(self, properties=None, storage=None, runner=AsyncRunner()):
+    def __init__(self, properties=None, storage=None, runner=None):
         super().__init__()
         self._properties = properties
         self._storage = storage
