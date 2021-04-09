@@ -8,6 +8,7 @@ class BasicQuery(AbstractQuery):
         self._generator = generator
         self._name = name
         self._item = item
+        self._deprecated = False
 
     @property
     def body(self):
@@ -33,7 +34,7 @@ class BasicQuery(AbstractQuery):
         self._args = args
 
     def regenerate(self, only_fields):
-        self._body = self.generator.generate(self._item, only_fields)
+        self._body, self._deprecated = self.generator.generate(self._item, only_fields)
 
     @property
     def query(self):

@@ -160,9 +160,7 @@ class GQLA:
 
     def create_data(self, data):
         for item in data:
-            obj = TypeFactory(item)
-            if obj is not None:
-                self.model.add_item(obj.parse(item))
+            TypeFactory(item, self.model)
 
     def generate_queries(self, specific=False, only_fields=False):
         if 'Query' in self.model.items:

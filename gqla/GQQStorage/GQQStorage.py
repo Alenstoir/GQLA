@@ -25,6 +25,14 @@ class BasicStorage(AbstractStorage):
     def storage(self):
         return self._query
 
+    @property
+    def deprecates(self):
+        deprecates = []
+        for query in self._query:
+            if self._query[query]._deprecated:
+                deprecates.append(query)
+        return deprecates
+
     def add(self, name: str, query: AbstractQuery):
         self._query[name] = query
 
