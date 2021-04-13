@@ -4,6 +4,7 @@ import logging
 
 import aiohttp
 import requests
+from aiohttp.client import DEFAULT_TIMEOUT
 
 from gqla.abstracts import AbstractExecutor, AbstractRunner
 
@@ -29,7 +30,7 @@ class AsyncRunner(AbstractRunner):
     async def run(self, pid, query):
         self._can_query()
         logging.info('Fetch async process {} started'.format(pid))
-        async with aiohttp.request('POST', self._properties.url_string, json=query) as resp:
+        async with aiohttp.request('POST', self._properties.url_string, json=query, timeout=DEFAULT_TIMEOUT) as resp:
             response = await resp.text()
         logging.info('Fetch async process {} ended'.format(pid))
         return json.loads(response)
@@ -56,7 +57,7 @@ class SyncRunner(AbstractRunner):
     def run(self, pid, query):
         self._can_query()
         logging.info('Fetch sync process {} started'.format(pid))
-        response = requests.post(self._properties.url_string, json=query)
+        response = requests.post(self._properties.url_string, json=query, timeout=30)
         logging.info('Fetch async process {} ended'.format(pid))
         return json.loads(response.text)
 
