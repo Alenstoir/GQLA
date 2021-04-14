@@ -3,6 +3,7 @@ import json
 import logging
 import logging.config
 import os.path
+from enum import Enum
 
 from gqla.Executor import BasicExecutor, AsyncRunner
 from gqla.GQLModel import GQModel
@@ -12,6 +13,12 @@ from gqla.GQQuery import NormalRule, RecursiveRule, BasicQueryGenerator
 from gqla.VerticalStorage import VerticalGeneratorProperties, VerticalUrlProperties
 from gqla.abstracts import AbstractStorage, AbstractExecutor
 from gqla.statics import INTROSPECTION, BASE_TEMPLATE, RAW
+
+
+class GQTypeEnum(Enum):
+    QUERIES = ['Query', 'Queries']
+    MUTATIONS = ['Mutation', 'Mutations']
+    SUBSCRIPTIONS = ['Subscription', 'Subscriptions']
 
 
 class GQLA:
@@ -132,7 +139,7 @@ class GQLA:
         if isinstance(query_name, dict):
             query_name = query_name['query'].split('{')[0].strip(' \n').split(' ')[1]
         if only_fields:
-            self.generate_queries(specific=query_name, only_fields=only_fields)
+            self.generate_items(typename=GQTypeEnum.QUERIES, specific=query_name, only_fields=only_fields)
             query_name = query = "only_" + query_name
         logging.info("FETCHING " + query_name + " WITH ARGS " + str(kwargs))
         result = await self.executor.execute(self._subpid, query, **kwargs)
@@ -156,19 +163,21 @@ class GQLA:
         queries = result['data']['__schema']['types']
 
         self.create_data(queries)
-        self.generate_queries()
+        self.generate_items(GQTypeEnum.QUERIES)
+        self.generate_items(GQTypeEnum.MUTATIONS)
+        self.generate_items(GQTypeEnum.SUBSCRIPTIONS)
 
     def create_data(self, data):
         for item in data:
             TypeFactory(item, self.model)
 
-    def generate_queries(self, specific=False, only_fields=False):
-        if 'Query' in self.model.items:
-            queries = self.model.items['Query'].fields
-        elif 'Queries' in self.model.items:
-            queries = self.model.items['Queries'].fields
-        else:
-            raise NotImplementedError
+    def generate_items(self, typename: GQTypeEnum, specific=False, only_fields=False):
+        queries = {}
+        for name in typename.value:
+            if name in self.model.items:
+                queries = self.model.items[name].fields
+        if not queries:
+            return
         if not specific:
             for query in queries:
                 self.qStorage.create(query, query, queries[query], self.recursive_depth)
@@ -188,15 +197,15 @@ All what lies bellow is standalone support
 
 
 async def asynchronous():  # Пример работы
-    ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor', 'parent1', 'id']
-    only = ['edges', 'node', 'code', 'name', 'StarObject', 'PlanetObject', 'orbitals']
+    ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor']
+    only = ['edges', 'node', 'name', 'uuid', 'objectUuid']
 
-    helper = GQLA('solar', url='localhost', port='8080', usefolder=True, ignore=ignore, recursive_depth=5)
+    helper = GQLA('target', url='localhost', port='8080', usefolder=True, ignore=ignore, recursive_depth=5)
     helper.only = only
     helper._pretty = True
     await helper.introspection()
-    
-    result = await helper.query_one('allStellar', usefolder=True, filters={'not': {'objectType': 'planet'}}, first='5')
+    deprecates = helper.qStorage.deprecates
+    result = await helper.query_one('allIdentifiedTarget', only_fields=True, first='5')
     print(result)
 
     result = await helper.query_one('allStellar', usefolder=False, only_fields=True, first='1')

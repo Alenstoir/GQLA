@@ -38,4 +38,4 @@ class BasicQuery(AbstractQuery):
 
     @property
     def query(self):
-        return self.name + (str(self._args) if len(self._args) > 0 else "") + self.body
+        return self.name + (str(self._args) if len(self._args) > 0 else "") + str(self.body)
