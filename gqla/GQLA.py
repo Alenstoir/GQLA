@@ -198,14 +198,16 @@ All what lies bellow is standalone support
 
 async def asynchronous():  # Пример работы
     ignore = ['pageInfo', 'deprecationReason', 'isDeprecated', 'cursor']
-    only = ['edges', 'node', 'name', 'uuid', 'objectUuid']
+    only = ['edges', 'node', 'code', 'name', 'StarObject', 'PlanetObject', 'orbitals']
 
-    helper = GQLA('target', url='localhost', port='8080', usefolder=True, ignore=ignore, recursive_depth=5)
+    helper = GQLA('solar', url='localhost', port='8080', usefolder=True, ignore=ignore, recursive_depth=5)
     helper.only = only
     helper._pretty = True
     await helper.introspection()
-    deprecates = helper.qStorage.deprecates
-    result = await helper.query_one('allIdentifiedTarget', only_fields=True, first='5')
+
+    print(helper.qStorage.deprecates)
+
+    result = await helper.query_one('allStellar', usefolder=True, filters={'not': {'objectType': 'planet'}}, first='5')
     print(result)
 
     result = await helper.query_one('allStellar', usefolder=False, only_fields=True, first='1')
